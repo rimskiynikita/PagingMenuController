@@ -126,13 +126,14 @@ open class MenuView: UIScrollView {
         
         update(currentPage: page)
         
-        let duration = animated ? menuOptions.animationDuration : 0
-        UIView.animate(withDuration: duration, animations: { [unowned self] () -> Void in
+        let animations = {() -> Void in
             self.focusMenuItem()
             if self.menuOptions.selectedItemCenter {
                 self.positionMenuItemViews()
             }
-        }) { [weak self] (_) in
+        }
+        
+        let completionBlock: ((Bool) -> Void) = { [weak self] (_: Bool) -> Void in
             guard let _ = self else { return }
             
             // relayout menu item views dynamically
@@ -154,6 +155,14 @@ open class MenuView: UIScrollView {
                 page != previousPage {
                 self!.onMove?(.didMoveItem(to: self!.currentMenuItemView, from: previousMenuItemView))
             }
+        }
+        if animated {
+            UIView.animate(withDuration: menuOptions.animationDuration,
+                           animations: animations,
+                           completion: completionBlock)
+        } else {
+            animations()
+            completionBlock(true)
         }
     }
     
